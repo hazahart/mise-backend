@@ -7,6 +7,7 @@ import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
+import {errorHandler} from "./middlewares/errorHandler";
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -35,6 +36,8 @@ app.use((req, res) => {
         message: `Ruta ${req.method} ${req.path} no encontrada`,
     });
 });
+
+app.use(errorHandler);
 
 app.listen(PORT, () => {
     console.log(`Mise backend corriendo en http://localhost:${PORT}`);
