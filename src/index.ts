@@ -8,6 +8,7 @@ import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
 import {errorHandler} from "./middlewares/errorHandler";
+import userRoutes from "./routes/user.routes";
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -29,6 +30,8 @@ app.get('/health', (req, res) => {
         version: '1.0.0',
     });
 });
+
+app.use('/users', userRoutes);
 
 app.use((req, res) => {
     res.status(404).json({
