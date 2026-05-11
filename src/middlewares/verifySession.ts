@@ -6,12 +6,12 @@ export async function verifySession(
     res: Response,
     next: NextFunction
 ): Promise<void> {
-    const session = req.headers['x-appwrite-session'] as string;
+    const token = req.headers['x-appwrite-session'] as string;
 
-    if (!session) {
+    if (!token) {
         res.status(401).json({
             code: 'unauthorized',
-            message: 'Sesión de Appwrite requerida',
+            message: 'Token de autenticación requerido',
         });
         return;
     }
@@ -20,7 +20,7 @@ export async function verifySession(
         const client = new Client()
             .setEndpoint(process.env.APPWRITE_ENDPOINT!)
             .setProject(process.env.APPWRITE_PROJECT_ID!)
-            .setSession(session);
+            .setJWT(token);
 
         const account = new Account(client);
         const user = await account.get();
@@ -32,7 +32,7 @@ export async function verifySession(
     } catch {
         res.status(401).json({
             code: 'unauthorized',
-            message: 'Sesión de Appwrite inválida o expirada',
+            message: 'Token inválido o expirado',
         });
     }
 }
