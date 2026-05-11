@@ -9,6 +9,7 @@ import helmet from 'helmet';
 import morgan from 'morgan';
 import {errorHandler} from "./middlewares/errorHandler";
 import userRoutes from "./routes/user.routes";
+import chefRoutes from "./routes/chef.routes";
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -32,6 +33,7 @@ app.get('/health', (req, res) => {
 });
 
 app.use('/users', userRoutes);
+app.use('/chefs', chefRoutes);
 
 app.use((req, res) => {
     res.status(404).json({
