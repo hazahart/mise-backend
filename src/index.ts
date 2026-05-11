@@ -1,0 +1,43 @@
+import 'dotenv/config';
+import {validateEnv} from './lib/env';
+
+validateEnv();
+
+import express from 'express';
+import cors from 'cors';
+import helmet from 'helmet';
+import morgan from 'morgan';
+
+const app = express();
+const PORT = process.env.PORT || 3000;
+
+app.use(helmet());
+app.use(cors({
+    origin: process.env.FRONTEND_URL,
+    credentials: true,
+}));
+app.use(morgan('dev'));
+
+app.use('/payments/webhook', express.raw({type: 'application/json'}));
+app.use(express.json());
+
+app.get('/health', (req, res) => {
+    res.json({
+        status: 'ok',
+        timestamp: new Date().toISOString(),
+        version: '1.0.0',
+    });
+});
+
+app.use((req, res) => {
+    res.status(404).json({
+        code: 'not_found',
+        message: `Ruta ${req.method} ${req.path} no encontrada`,
+    });
+});
+
+app.listen(PORT, () => {
+    console.log(`Mise backend corriendo en http://localhost:${PORT}`);
+});
+
+export default app;
