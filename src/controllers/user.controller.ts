@@ -1,10 +1,10 @@
-import {Request, Response, NextFunction} from 'express';
-import {userService} from '../services/user.service';
-import {UpdateUsuarioInput, UpdateRoleInput} from '../schemas/user.schema';
+import { Request, Response, NextFunction } from 'express';
+import { userService } from '../services/user.service';
+import { UpdateUsuarioInput, UpdateRoleInput } from '../schemas/user.schema';
 
 export async function getMe(req: Request, res: Response, next: NextFunction) {
     try {
-        const userId = req.user!.$id;
+        const userId = req.user!.uid;
         const user = await userService.getMe(userId);
         res.json(user);
     } catch (error) {
@@ -14,7 +14,7 @@ export async function getMe(req: Request, res: Response, next: NextFunction) {
 
 export async function updateMe(req: Request, res: Response, next: NextFunction) {
     try {
-        const userId = req.user!.$id;
+        const userId = req.user!.uid;
         const data = req.body as UpdateUsuarioInput;
         const user = await userService.updateMe(userId, data);
         res.json(user);

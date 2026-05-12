@@ -7,9 +7,10 @@ import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
-import {errorHandler} from "./middlewares/errorHandler";
-import userRoutes from "./routes/user.routes";
-import chefRoutes from "./routes/chef.routes";
+import './lib/firebase';
+import userRoutes from './routes/user.routes';
+import chefRoutes from './routes/chef.routes';
+import {errorHandler} from './middlewares/errorHandler';
 
 const app = express();
 const PORT = process.env.PORT || 3000;

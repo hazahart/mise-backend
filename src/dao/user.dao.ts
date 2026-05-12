@@ -1,21 +1,26 @@
-import {users} from '../lib/appwrite';
+import {auth, db} from '../lib/firebase';
 
 export class UserDAO {
 
     async findById(userId: string) {
         try {
-            const user = await users.get(userId);
-            const prefs = user.prefs as Record<string, string>;
+            console.log('Buscando usuario:', userId);
+            const user = await auth.getUser(userId);
+            console.log('Firebase Auth user:', user.uid);
+            const doc = await db.collection('usuarios').doc(userId).get();
+            console.log('Firestore doc exists:', doc.exists);
+            console.log('Firestore data:', doc.data());
+            const data = doc.data() ?? {};
 
             return {
-                id: user.$id,
-                nombre: user.name,
-                email: user.email,
-                fotoUrl: prefs.fotoUrl ?? null,
-                rol: prefs.rol ?? 'free',
-                suscripcionActiva: prefs.suscripcionActiva === 'true',
-                suscripcionExpira: prefs.suscripcionExpira ?? null,
-                stripeCustomerId: prefs.stripeCustomerId ?? null,
+                id: user.uid,
+                nombre: user.displayName ?? '',
+                email: user.email ?? '',
+                fotoUrl: user.photoURL ?? null,
+                rol: data.rol ?? 'free',
+                suscripcionActiva: data.suscripcionActiva ?? false,
+                suscripcionExpira: data.suscripcionExpira ?? null,
+                stripeCustomerId: data.stripeCustomerId ?? null,
             };
         } catch {
             return null;
@@ -23,17 +28,10 @@ export class UserDAO {
     }
 
     async update(userId: string, data: { nombre?: string; fotoUrl?: string }) {
-        if (data.nombre) {
-            await users.updateName(userId, data.nombre);
-        }
-
-        if (data.fotoUrl) {
-            const current = await users.getPrefs(userId);
-            await users.updatePrefs(userId, {
-                ...current,
-                fotoUrl: data.fotoUrl,
-            });
-        }
+        await auth.updateUser(userId, {
+            ...(data.nombre && {displayName: data.nombre}),
+            ...(data.fotoUrl && {photoURL: data.fotoUrl}),
+        });
 
         return this.findById(userId);
     }
@@ -44,16 +42,15 @@ export class UserDAO {
         stripeSubscriptionId?: string;
         suscripcionExpira?: string;
     }) {
-        const current = await users.getPrefs(userId);
+        await auth.setCustomUserClaims(userId, {rol: data.nuevoRol});
 
-        await users.updatePrefs(userId, {
-            ...current,
+        await db.collection('usuarios').doc(userId).set({
             rol: data.nuevoRol,
-            suscripcionActiva: data.nuevoRol === 'premium' ? 'true' : 'false',
+            suscripcionActiva: data.nuevoRol === 'premium',
             ...(data.stripeCustomerId && {stripeCustomerId: data.stripeCustomerId}),
             ...(data.stripeSubscriptionId && {stripeSubscriptionId: data.stripeSubscriptionId}),
             ...(data.suscripcionExpira && {suscripcionExpira: data.suscripcionExpira}),
-        });
+        }, {merge: true});
 
         return this.findById(userId);
     }

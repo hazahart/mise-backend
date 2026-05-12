@@ -1,9 +1,9 @@
-import {Models} from 'node-appwrite';
+import {DecodedIdToken} from 'firebase-admin/auth';
 
 declare global {
     namespace Express {
         interface Request {
-            user?: Models.User<Models.Preferences>;
+            user?: DecodedIdToken;
             userRole?: string;
         }
     }

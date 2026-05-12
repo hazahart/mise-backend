@@ -1,27 +1,26 @@
-import {users, databases} from '../lib/appwrite';
-import {Query} from 'node-appwrite';
-
-const DATABASE_ID = process.env.APPWRITE_DATABASE_ID!;
-const SESSIONS_TABLE = 'sesiones';
+import {auth, db} from '../lib/firebase';
 
 export class ChefDAO {
 
     async findAll(filters: { especialidad?: string; disponible?: boolean }) {
-        const allUsers = await users.list();
+        const listResult = await auth.listUsers();
 
-        let chefs = allUsers.users
-            .filter(u => (u.prefs as Record<string, string>).rol === 'chef')
-            .map(u => {
-                const prefs = u.prefs as Record<string, string>;
-                return {
-                    id: u.$id,
-                    nombre: u.name,
-                    especialidad: prefs.especialidad ?? null,
-                    bio: prefs.bio ?? null,
-                    fotoUrl: prefs.fotoUrl ?? null,
-                    disponible: prefs.disponible === 'true',
-                };
-            });
+        let chefs = await Promise.all(
+            listResult.users
+                .filter(u => u.customClaims?.rol === 'chef')
+                .map(async u => {
+                    const doc = await db.collection('usuarios').doc(u.uid).get();
+                    const data = doc.data() ?? {};
+                    return {
+                        id: u.uid,
+                        nombre: u.displayName ?? '',
+                        especialidad: data.especialidad ?? null,
+                        bio: data.bio ?? null,
+                        fotoUrl: u.photoURL ?? null,
+                        disponible: data.disponible ?? true,
+                    };
+                })
+        );
 
         if (filters.especialidad) {
             chefs = chefs.filter(c => c.especialidad === filters.especialidad);
@@ -36,18 +35,19 @@ export class ChefDAO {
 
     async findById(chefId: string) {
         try {
-            const user = await users.get(chefId);
-            const prefs = user.prefs as Record<string, string>;
+            const user = await auth.getUser(chefId);
+            if (user.customClaims?.rol !== 'chef') return null;
 
-            if (prefs.rol !== 'chef') return null;
+            const doc = await db.collection('usuarios').doc(chefId).get();
+            const data = doc.data() ?? {};
 
             return {
-                id: user.$id,
-                nombre: user.name,
-                especialidad: prefs.especialidad ?? null,
-                bio: prefs.bio ?? null,
-                fotoUrl: prefs.fotoUrl ?? null,
-                disponible: prefs.disponible === 'true',
+                id: user.uid,
+                nombre: user.displayName ?? '',
+                especialidad: data.especialidad ?? null,
+                bio: data.bio ?? null,
+                fotoUrl: user.photoURL ?? null,
+                disponible: data.disponible ?? true,
             };
         } catch {
             return null;
@@ -64,27 +64,19 @@ export class ChefDAO {
         ];
 
         try {
-            const sesiones = await databases.listDocuments(DATABASE_ID, SESSIONS_TABLE, [
-                Query.equal('chefId', chefId),
-                Query.greaterThanEqual('fecha', `${fecha}T00:00:00Z`),
-                Query.lessThan('fecha', `${fecha}T23:59:59Z`),
-                Query.notEqual('estado', 'cancelada'),
-            ]);
+            const snapshot = await db.collection('sesiones')
+                .where('chefId', '==', chefId)
+                .where('fecha', '>=', `${fecha}T00:00:00Z`)
+                .where('fecha', '<=', `${fecha}T23:59:59Z`)
+                .where('estado', '!=', 'cancelada')
+                .get();
 
-            const ocupados = sesiones.documents.map(s => s.fecha as string);
+            const ocupados = snapshot.docs.map(d => d.data().fecha as string);
             const disponibles = slots.filter(s => !ocupados.includes(s));
 
-            return {
-                chefId,
-                fecha,
-                slotsDisponibles: disponibles,
-            };
+            return {chefId, fecha, slotsDisponibles: disponibles};
         } catch {
-            return {
-                chefId,
-                fecha,
-                slotsDisponibles: slots,
-            };
+            return {chefId, fecha, slotsDisponibles: slots};
         }
     }
 }

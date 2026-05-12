@@ -1,14 +1,14 @@
 import {Request, Response, NextFunction} from 'express';
-import {Client, Account} from 'node-appwrite';
+import {auth} from '../lib/firebase';
 
 export async function verifySession(
     req: Request,
     res: Response,
     next: NextFunction
 ): Promise<void> {
-    const token = req.headers['x-appwrite-session'] as string;
+    const authHeader = req.headers['authorization'] as string;
 
-    if (!token) {
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
         res.status(401).json({
             code: 'unauthorized',
             message: 'Token de autenticación requerido',
@@ -16,18 +16,12 @@ export async function verifySession(
         return;
     }
 
+    const token = authHeader.split(' ')[1];
+
     try {
-        const client = new Client()
-            .setEndpoint(process.env.APPWRITE_ENDPOINT!)
-            .setProject(process.env.APPWRITE_PROJECT_ID!)
-            .setJWT(token);
-
-        const account = new Account(client);
-        const user = await account.get();
-
-        req.user = user;
-        req.userRole = (user.prefs as { rol?: string }).rol ?? 'free';
-
+        const decoded = await auth.verifyIdToken(token);
+        req.user = decoded;
+        req.userRole = (decoded.rol as string) ?? 'free';
         next();
     } catch {
         res.status(401).json({
