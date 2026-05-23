@@ -13,6 +13,7 @@ import chefRoutes from "./routes/chef.routes";
 import categoryRoutes from "./routes/category.routes";
 import recipeRoutes from "./routes/recipe.routes";
 import { errorHandler } from "./middlewares/errorHandler";
+import aiRoutes from './routes/ai.routes';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -41,6 +42,7 @@ app.use("/users", userRoutes);
 app.use("/chefs", chefRoutes);
 app.use("/categories", categoryRoutes);
 app.use("/recipes", recipeRoutes);
+app.use('/ai', aiRoutes);
 
 app.use((req, res) => {
   res.status(404).json({
