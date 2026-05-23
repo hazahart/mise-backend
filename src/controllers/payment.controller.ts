@@ -14,13 +14,22 @@ export const PaymentController = {
         }
     },
 
+    async cancelSubscription(req: Request, res: Response, next: NextFunction) {
+        try {
+            const userId = req.user!.uid;
+            const result = await PaymentService.cancelSubscription(userId);
+            res.json(result);
+        } catch (error) {
+            next(error);
+        }
+    },
+
     async handleWebhook(req: Request, res: Response, next: NextFunction) {
         try {
             const signature = req.headers['stripe-signature'] as string;
             await PaymentService.handleWebhook(req.body as Buffer, signature);
             res.json({ received: true });
         } catch (error) {
-            console.error('Webhook error:', error);
             next(error);
         }
     },

@@ -17,6 +17,14 @@ export const PaymentService = {
             throw { status: 404, code: 'not_found', message: 'Usuario no encontrado' };
         }
 
+        if (usuario.rol === 'premium' && usuario.suscripcionActiva) {
+            throw {
+                status: 400,
+                code: 'already_subscribed',
+                message: `Ya tienes una suscripción activa${usuario.suscripcionExpira ? ` que vence el ${new Date(usuario.suscripcionExpira).toLocaleDateString('es-MX', { year: 'numeric', month: 'long', day: 'numeric' })}` : ''}`,
+            };
+        }
+
         let customerId = usuario.stripeCustomerId;
 
         if (!customerId) {
@@ -35,6 +43,43 @@ export const PaymentService = {
         });
 
         return { sessionId: session.id, checkoutUrl: session.url };
+    },
+
+    async cancelSubscription(userId: string) {
+        const usuario = await userDAO.findById(userId);
+        if (!usuario) {
+            throw { status: 404, code: 'not_found', message: 'Usuario no encontrado' };
+        }
+
+        if (usuario.rol !== 'premium' || !usuario.suscripcionActiva) {
+            throw { status: 400, code: 'no_active_subscription', message: 'No tienes una suscripción activa' };
+        }
+
+        const { db } = await import('../lib/firebase');
+        const doc = await db.collection('usuarios').doc(userId).get();
+        const stripeSubscriptionId = doc.data()?.['stripeSubscriptionId'] as string | undefined;
+
+        if (!stripeSubscriptionId) {
+            throw { status: 400, code: 'no_subscription_id', message: 'No se encontró el ID de suscripción' };
+        }
+
+        const subscription = await stripe.subscriptions.update(stripeSubscriptionId, {
+            cancel_at_period_end: true,
+        });
+
+        const subData = subscription as unknown as Record<string, unknown>;
+        const items = subData['items'] as { data: Array<Record<string, unknown>> };
+        const firstItem = items?.data?.[0];
+        const periodEnd = firstItem?.['current_period_end'] as number | undefined;
+        const expira = periodEnd ? new Date(periodEnd * 1000).toLocaleDateString('es-MX', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+        }) : null;
+
+        return {
+            message: `Tu suscripción se cancelará al final del periodo${expira ? `. Mantendrás acceso premium hasta el ${expira}` : ''}`,
+        };
     },
 
     async handleWebhook(payload: Buffer, signature: string) {
