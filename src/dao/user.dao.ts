@@ -1,26 +1,44 @@
-import {auth, db} from '../lib/firebase';
+import { auth, db } from '../lib/firebase';
 
 export class UserDAO {
-
     async findById(userId: string) {
         try {
-            console.log('Buscando usuario:', userId);
             const user = await auth.getUser(userId);
-            console.log('Firebase Auth user:', user.uid);
-            const doc = await db.collection('usuarios').doc(userId).get();
-            console.log('Firestore doc exists:', doc.exists);
-            console.log('Firestore data:', doc.data());
-            const data = doc.data() ?? {};
+            const docRef = db.collection('usuarios').doc(userId);
+            const doc = await docRef.get();
 
+            if (!doc.exists) {
+                const nuevoUsuario = {
+                    displayName: user.displayName ?? '',
+                    rol: 'free',
+                    suscripcionActiva: false,
+                    suscripcionExpira: null,
+                    stripeCustomerId: null,
+                    creadoEn: new Date().toISOString(),
+                };
+                await docRef.set(nuevoUsuario);
+                return {
+                    id: user.uid,
+                    nombre: user.displayName ?? '',
+                    email: user.email ?? '',
+                    fotoUrl: user.photoURL ?? null,
+                    rol: 'free',
+                    suscripcionActiva: false,
+                    suscripcionExpira: null,
+                    stripeCustomerId: null,
+                };
+            }
+
+            const data = doc.data() ?? {};
             return {
                 id: user.uid,
                 nombre: user.displayName ?? '',
                 email: user.email ?? '',
                 fotoUrl: user.photoURL ?? null,
-                rol: data.rol ?? 'free',
-                suscripcionActiva: data.suscripcionActiva ?? false,
-                suscripcionExpira: data.suscripcionExpira ?? null,
-                stripeCustomerId: data.stripeCustomerId ?? null,
+                rol: data['rol'] ?? 'free',
+                suscripcionActiva: data['suscripcionActiva'] ?? false,
+                suscripcionExpira: data['suscripcionExpira'] ?? null,
+                stripeCustomerId: data['stripeCustomerId'] ?? null,
             };
         } catch {
             return null;
@@ -29,10 +47,9 @@ export class UserDAO {
 
     async update(userId: string, data: { nombre?: string; fotoUrl?: string }) {
         await auth.updateUser(userId, {
-            ...(data.nombre && {displayName: data.nombre}),
-            ...(data.fotoUrl && {photoURL: data.fotoUrl}),
+            ...(data.nombre && { displayName: data.nombre }),
+            ...(data.fotoUrl && { photoURL: data.fotoUrl }),
         });
-
         return this.findById(userId);
     }
 
@@ -42,16 +59,14 @@ export class UserDAO {
         stripeSubscriptionId?: string;
         suscripcionExpira?: string;
     }) {
-        await auth.setCustomUserClaims(userId, {rol: data.nuevoRol});
-
+        await auth.setCustomUserClaims(userId, { rol: data.nuevoRol });
         await db.collection('usuarios').doc(userId).set({
             rol: data.nuevoRol,
             suscripcionActiva: data.nuevoRol === 'premium',
-            ...(data.stripeCustomerId && {stripeCustomerId: data.stripeCustomerId}),
-            ...(data.stripeSubscriptionId && {stripeSubscriptionId: data.stripeSubscriptionId}),
-            ...(data.suscripcionExpira && {suscripcionExpira: data.suscripcionExpira}),
-        }, {merge: true});
-
+            ...(data.stripeCustomerId && { stripeCustomerId: data.stripeCustomerId }),
+            ...(data.stripeSubscriptionId && { stripeSubscriptionId: data.stripeSubscriptionId }),
+            ...(data.suscripcionExpira && { suscripcionExpira: data.suscripcionExpira }),
+        }, { merge: true });
         return this.findById(userId);
     }
 }
