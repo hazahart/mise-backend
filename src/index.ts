@@ -14,6 +14,7 @@ import categoryRoutes from "./routes/category.routes";
 import recipeRoutes from "./routes/recipe.routes";
 import { errorHandler } from "./middlewares/errorHandler";
 import aiRoutes from './routes/ai.routes';
+import paymentRoutes from './routes/payment.routes';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -27,7 +28,7 @@ app.use(
 );
 app.use(morgan("dev"));
 
-app.use("/payments/webhook", express.raw({ type: "application/json" }));
+app.use('/payments/webhook', express.raw({ type: 'application/json' }));
 app.use(express.json());
 
 app.get("/health", (req, res) => {
@@ -43,6 +44,7 @@ app.use("/chefs", chefRoutes);
 app.use("/categories", categoryRoutes);
 app.use("/recipes", recipeRoutes);
 app.use('/ai', aiRoutes);
+app.use('/payments', paymentRoutes);
 
 app.use((req, res) => {
   res.status(404).json({

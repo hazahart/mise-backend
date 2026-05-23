@@ -15,6 +15,7 @@ export class UserDAO {
                     suscripcionExpira: null,
                     stripeCustomerId: null,
                     creadoEn: new Date().toISOString(),
+                    ultimoAcceso: new Date().toISOString(),
                 };
                 await docRef.set(nuevoUsuario);
                 return {
@@ -28,6 +29,8 @@ export class UserDAO {
                     stripeCustomerId: null,
                 };
             }
+
+            await docRef.update({ ultimoAcceso: new Date().toISOString() });
 
             const data = doc.data() ?? {};
             return {
@@ -43,6 +46,27 @@ export class UserDAO {
         } catch {
             return null;
         }
+    }
+
+    async findByStripeCustomerId(stripeCustomerId: string) {
+        const snapshot = await db.collection('usuarios')
+            .where('stripeCustomerId', '==', stripeCustomerId)
+            .limit(1)
+            .get();
+        if (snapshot.empty) return null;
+        const doc = snapshot.docs[0];
+        const user = await auth.getUser(doc.id);
+        const data = doc.data();
+        return {
+            id: doc.id,
+            nombre: user.displayName ?? '',
+            email: user.email ?? '',
+            fotoUrl: user.photoURL ?? null,
+            rol: data['rol'] ?? 'free',
+            suscripcionActiva: data['suscripcionActiva'] ?? false,
+            suscripcionExpira: data['suscripcionExpira'] ?? null,
+            stripeCustomerId: data['stripeCustomerId'] ?? null,
+        };
     }
 
     async update(userId: string, data: { nombre?: string; fotoUrl?: string }) {
