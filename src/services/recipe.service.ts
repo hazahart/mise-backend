@@ -32,18 +32,24 @@ export const RecipeService = {
     return RecipeDAO.create(data);
   },
 
-  async update(id: string, data: Partial<Omit<Receta, "id">>): Promise<Receta> {
+  async update(id: string, chefId: string, data: Partial<Omit<Receta, "id">>): Promise<Receta> {
     const existe = await RecipeDAO.findById(id);
     if (!existe) {
       throw { status: 404, code: "not_found", message: "Receta no encontrada" };
     }
+    if (existe.chefId !== chefId) {
+      throw { status: 403, code: "forbidden", message: "No tienes permiso para editar esta receta" };
+    }
     return RecipeDAO.update(id, data);
   },
 
-  async remove(id: string): Promise<void> {
+  async remove(id: string, chefId: string): Promise<void> {
     const existe = await RecipeDAO.findById(id);
     if (!existe) {
       throw { status: 404, code: "not_found", message: "Receta no encontrada" };
+    }
+    if (existe.chefId !== chefId) {
+      throw { status: 403, code: "forbidden", message: "No tienes permiso para eliminar esta receta" };
     }
     return RecipeDAO.remove(id);
   },

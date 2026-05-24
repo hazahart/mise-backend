@@ -43,8 +43,10 @@ export const RecipeController = {
 
   async update(req: Request, res: Response, next: NextFunction) {
     try {
+      const chefId = req.user!.uid;
       const receta = await RecipeService.update(
         req.params["id"] as string,
+        chefId,
         req.body,
       );
       res.json(receta);
@@ -55,7 +57,8 @@ export const RecipeController = {
 
   async remove(req: Request, res: Response, next: NextFunction) {
     try {
-      await RecipeService.remove(req.params["id"] as string);
+      const chefId = req.user!.uid;
+      await RecipeService.remove(req.params["id"] as string, chefId);
       res.status(204).send();
     } catch (error) {
       next(error);
