@@ -63,4 +63,34 @@ export const RecipeDAO = {
       ...doc.data(),
     })) as Receta[];
   },
+
+  async create(data: Omit<Receta, "id">): Promise<Receta> {
+    const id = data.titulo
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/\s+/g, "-")
+      .replace(/[^a-z0-9-]/g, "");
+    const receta = {
+      ...data,
+      totalIngredientes: data.ingredientes.length,
+      creadoEn: new Date().toISOString(),
+    };
+    await db.collection("recetas").doc(id).set(receta);
+    return { id, ...receta };
+  },
+
+  async update(id: string, data: Partial<Omit<Receta, "id">>): Promise<Receta> {
+    const updateData = { ...data };
+    if (data.ingredientes) {
+      updateData.totalIngredientes = data.ingredientes.length;
+    }
+    await db.collection("recetas").doc(id).update(updateData);
+    const updated = await db.collection("recetas").doc(id).get();
+    return { id: updated.id, ...updated.data() } as Receta;
+  },
+
+  async remove(id: string): Promise<void> {
+    await db.collection("recetas").doc(id).delete();
+  },
 };
