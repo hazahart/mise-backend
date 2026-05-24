@@ -1,4 +1,5 @@
 import { auth, db } from '../lib/firebase';
+import type { CompleteOnboardingInput } from '../schemas/user.schema';
 
 export class UserDAO {
     async findById(userId: string) {
@@ -14,6 +15,7 @@ export class UserDAO {
                     suscripcionActiva: false,
                     suscripcionExpira: null,
                     stripeCustomerId: null,
+                    onboardingCompletado: false,
                     creadoEn: new Date().toISOString(),
                     ultimoAcceso: new Date().toISOString(),
                 };
@@ -27,6 +29,7 @@ export class UserDAO {
                     suscripcionActiva: false,
                     suscripcionExpira: null,
                     stripeCustomerId: null,
+                    onboardingCompletado: false,
                 };
             }
 
@@ -42,6 +45,7 @@ export class UserDAO {
                 suscripcionActiva: data['suscripcionActiva'] ?? false,
                 suscripcionExpira: data['suscripcionExpira'] ?? null,
                 stripeCustomerId: data['stripeCustomerId'] ?? null,
+                onboardingCompletado: data['onboardingCompletado'] ?? false,
             };
         } catch {
             return null;
@@ -66,6 +70,7 @@ export class UserDAO {
             suscripcionActiva: data['suscripcionActiva'] ?? false,
             suscripcionExpira: data['suscripcionExpira'] ?? null,
             stripeCustomerId: data['stripeCustomerId'] ?? null,
+            onboardingCompletado: data['onboardingCompletado'] ?? false,
         };
     }
 
@@ -74,6 +79,25 @@ export class UserDAO {
             ...(data.nombre && { displayName: data.nombre }),
             ...(data.fotoUrl && { photoURL: data.fotoUrl }),
         });
+        return this.findById(userId);
+    }
+
+    async completeOnboarding(userId: string, data: CompleteOnboardingInput) {
+        await auth.updateUser(userId, {
+            displayName: data.nombre,
+            ...(data.fotoUrl && { photoURL: data.fotoUrl }),
+        });
+
+        await auth.setCustomUserClaims(userId, { rol: data.rol });
+
+        await db.collection('usuarios').doc(userId).set({
+            rol: data.rol,
+            bio: data.bio ?? null,
+            especialidad: data.especialidad ?? null,
+            onboardingCompletado: true,
+            suscripcionActiva: false,
+        }, { merge: true });
+
         return this.findById(userId);
     }
 
