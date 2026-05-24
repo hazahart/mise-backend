@@ -1,6 +1,6 @@
-import {Request, Response, NextFunction} from 'express';
-import {chefService} from '../services/chef.service';
-import {ListChefsInput, ChefAvailabilityInput} from '../schemas/chef.schema';
+import { Request, Response, NextFunction } from 'express';
+import { chefService } from '../services/chef.service';
+import { ListChefsInput, ChefAvailabilityInput } from '../schemas/chef.schema';
 
 export async function listChefs(req: Request, res: Response, next: NextFunction) {
     try {
@@ -14,7 +14,7 @@ export async function listChefs(req: Request, res: Response, next: NextFunction)
 
 export async function getChef(req: Request, res: Response, next: NextFunction) {
     try {
-        const {id} = req.params;
+        const id = req.params['id'] as string;
         const chef = await chefService.getChef(id);
         res.json(chef);
     } catch (error) {
@@ -24,7 +24,7 @@ export async function getChef(req: Request, res: Response, next: NextFunction) {
 
 export async function getChefAvailability(req: Request, res: Response, next: NextFunction) {
     try {
-        const {id} = req.params;
+        const id = req.params['id'] as string;
         const filters = req.query as unknown as ChefAvailabilityInput;
         const availability = await chefService.getAvailability(id, filters);
         res.json(availability);
