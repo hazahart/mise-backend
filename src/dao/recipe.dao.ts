@@ -55,13 +55,14 @@ export const RecipeDAO = {
     const snapshot = await db
       .collection("recetas")
       .where("esPremium", "==", true)
-      .orderBy("creadoEn", "desc")
-      .limit(6)
       .get();
-    return snapshot.docs.map((doc) => ({
+
+    const todas = snapshot.docs.map((doc) => ({
       id: doc.id,
       ...doc.data(),
     })) as Receta[];
+
+    return todas.sort(() => Math.random() - 0.5).slice(0, 3);
   },
 
   async create(data: Omit<Receta, "id">): Promise<Receta> {
