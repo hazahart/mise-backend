@@ -13,6 +13,12 @@ router.post(
     PaymentController.createCheckoutSession,
 );
 
+router.delete(
+    '/subscription',
+    verifySession,
+    PaymentController.cancelSubscription,
+);
+
 router.post('/webhook', PaymentController.handleWebhook);
 
 export default router;
