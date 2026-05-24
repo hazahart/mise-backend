@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { userService } from '../services/user.service';
-import { UpdateUsuarioInput, UpdateRoleInput } from '../schemas/user.schema';
+import { UpdateUsuarioInput, UpdateRoleInput, CompleteOnboardingInput } from '../schemas/user.schema';
 
 export async function getMe(req: Request, res: Response, next: NextFunction) {
     try {
@@ -17,6 +17,17 @@ export async function updateMe(req: Request, res: Response, next: NextFunction) 
         const userId = req.user!.uid;
         const data = req.body as UpdateUsuarioInput;
         const user = await userService.updateMe(userId, data);
+        res.json(user);
+    } catch (error) {
+        next(error);
+    }
+}
+
+export async function completeOnboarding(req: Request, res: Response, next: NextFunction) {
+    try {
+        const userId = req.user!.uid;
+        const data = req.body as CompleteOnboardingInput;
+        const user = await userService.completeOnboarding(userId, data);
         res.json(user);
     } catch (error) {
         next(error);
