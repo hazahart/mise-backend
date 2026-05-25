@@ -43,3 +43,12 @@ export async function updateUserRole(req: Request, res: Response, next: NextFunc
         next(error);
     }
 }
+
+export async function getUserById(req: Request, res: Response, next: NextFunction) {
+    try {
+        const user = await userService.getMe(req.params['id'] as string);
+        res.json(user);
+    } catch (error) {
+        next(error);
+    }
+}
