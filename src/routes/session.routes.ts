@@ -7,41 +7,11 @@ import { createSesionSchema, updateSesionSchema } from '../schemas/session.schem
 
 const router = Router();
 
-router.get(
-    '/',
-    verifySession,
-    verifyRole(['premium', 'chef']),
-    SessionController.getMySessions,
-);
-
-router.get(
-    '/:id',
-    verifySession,
-    verifyRole(['premium', 'chef']),
-    SessionController.getById,
-);
-
-router.post(
-    '/',
-    verifySession,
-    verifyRole(['premium']),
-    validate(createSesionSchema),
-    SessionController.create,
-);
-
-router.patch(
-    '/:id',
-    verifySession,
-    verifyRole(['premium', 'chef']),
-    validate(updateSesionSchema),
-    SessionController.update,
-);
-
-router.delete(
-    '/:id',
-    verifySession,
-    verifyRole(['premium']),
-    SessionController.delete,
-);
+router.get('/', verifySession, verifyRole(['premium', 'chef']), SessionController.getMySessions);
+router.get('/chef', verifySession, verifyRole(['chef']), SessionController.getChefSessions);
+router.get('/:id', verifySession, verifyRole(['premium', 'chef']), SessionController.getById);
+router.post('/', verifySession, verifyRole(['premium']), validate(createSesionSchema), SessionController.create);
+router.patch('/:id', verifySession, verifyRole(['premium', 'chef']), validate(updateSesionSchema), SessionController.update);
+router.delete('/:id', verifySession, verifyRole(['premium']), SessionController.delete);
 
 export default router;

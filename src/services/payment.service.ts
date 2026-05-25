@@ -71,14 +71,21 @@ export const PaymentService = {
         const items = subData['items'] as { data: Array<Record<string, unknown>> };
         const firstItem = items?.data?.[0];
         const periodEnd = firstItem?.['current_period_end'] as number | undefined;
-        const expira = periodEnd ? new Date(periodEnd * 1000).toLocaleDateString('es-MX', {
+        const expira = periodEnd ? new Date(periodEnd * 1000).toISOString() : null;
+
+        await db.collection('usuarios').doc(userId).update({
+            suscripcionCancelada: true,
+            ...(expira && { suscripcionExpira: expira }),
+        });
+
+        const expiraFormato = expira ? new Date(expira).toLocaleDateString('es-MX', {
             year: 'numeric',
             month: 'long',
             day: 'numeric',
         }) : null;
 
         return {
-            message: `Tu suscripción se cancelará al final del periodo${expira ? `. Mantendrás acceso premium hasta el ${expira}` : ''}`,
+            message: `Tu suscripción se cancelará al final del periodo${expiraFormato ? `. Mantendrás acceso premium hasta el ${expiraFormato}` : ''}`,
         };
     },
 

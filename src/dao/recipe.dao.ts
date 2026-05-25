@@ -1,4 +1,5 @@
 import { db } from "../lib/firebase";
+import admin from "../lib/firebase";
 import type { Receta } from "../types/catalog";
 
 export const RecipeDAO = {
@@ -78,6 +79,9 @@ export const RecipeDAO = {
       creadoEn: new Date().toISOString(),
     };
     await db.collection("recetas").doc(id).set(receta);
+    await db.collection("categorias").doc(data.categoriaId).update({
+      totalRecetas: admin.firestore.FieldValue.increment(1),
+    });
     return { id, ...receta };
   },
 
@@ -92,7 +96,14 @@ export const RecipeDAO = {
   },
 
   async remove(id: string): Promise<void> {
+    const doc = await db.collection("recetas").doc(id).get();
+    const categoriaId = doc.data()?.['categoriaId'] as string | undefined;
     await db.collection("recetas").doc(id).delete();
+    if (categoriaId) {
+      await db.collection("categorias").doc(categoriaId).update({
+        totalRecetas: admin.firestore.FieldValue.increment(-1),
+      });
+    }
   },
 
   async findByChef(chefId: string): Promise<Receta[]> {

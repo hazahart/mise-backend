@@ -1,5 +1,6 @@
 import { RecipeDAO } from "../dao/recipe.dao";
-import { auth, db } from "../lib/firebase";
+import { CategoryDAO } from "../dao/category.dao";
+import { auth } from "../lib/firebase";
 import type { Receta } from "../types/catalog";
 
 export const RecipeService = {
@@ -37,6 +38,7 @@ export const RecipeService = {
     titulo: string;
     descripcion: string;
     categoriaId: string;
+    nuevaCategoria?: { nombre: string; descripcion: string; imagenUrl?: string | null };
     imagenUrl?: string | null;
     videoUrl?: string | null;
     tiempoEstimadoMin: number;
@@ -48,11 +50,29 @@ export const RecipeService = {
     const chefUser = await auth.getUser(chefId);
     const chefNombre = chefUser.displayName ?? 'Chef';
 
-    const categoriaDoc = await db.collection('categorias').doc(data.categoriaId).get();
-    const categoriaNombre = categoriaDoc.data()?.['nombre'] ?? data.categoriaId;
+    let categoriaId = data.categoriaId;
+    let categoriaNombre = '';
+
+    if (data.nuevaCategoria) {
+      const nueva = await CategoryDAO.create({
+        nombre: data.nuevaCategoria.nombre,
+        descripcion: data.nuevaCategoria.descripcion,
+        imagenUrl: data.nuevaCategoria.imagenUrl ?? null,
+        totalRecetas: 0,
+      });
+      categoriaId = nueva.id;
+      categoriaNombre = nueva.nombre;
+    } else {
+      const categoria = await CategoryDAO.findById(categoriaId);
+      if (!categoria) {
+        throw { status: 404, code: "not_found", message: "Categoría no encontrada" };
+      }
+      categoriaNombre = categoria.nombre;
+    }
 
     return RecipeDAO.create({
       ...data,
+      categoriaId,
       chefId,
       chefNombre,
       categoriaNombre,
@@ -63,7 +83,7 @@ export const RecipeService = {
     } as unknown as Omit<Receta, "id">);
   },
 
-  async update(id: string, chefId: string, data: Partial<Omit<Receta, "id">>): Promise<Receta> {
+  async update(id: string, chefId: string, data: Partial<Omit<Receta, "id">> & { nuevaCategoria?: { nombre: string; descripcion: string; imagenUrl?: string | null } }): Promise<Receta> {
     const existe = await RecipeDAO.findById(id);
     if (!existe) {
       throw { status: 404, code: "not_found", message: "Receta no encontrada" };
@@ -72,9 +92,19 @@ export const RecipeService = {
       throw { status: 403, code: "forbidden", message: "No tienes permiso para editar esta receta" };
     }
 
-    if (data.categoriaId && data.categoriaId !== existe.categoriaId) {
-      const categoriaDoc = await db.collection('categorias').doc(data.categoriaId).get();
-      data.categoriaNombre = categoriaDoc.data()?.['nombre'] ?? data.categoriaId;
+    if (data.nuevaCategoria) {
+      const nueva = await CategoryDAO.create({
+        nombre: data.nuevaCategoria.nombre,
+        descripcion: data.nuevaCategoria.descripcion,
+        imagenUrl: data.nuevaCategoria.imagenUrl ?? null,
+        totalRecetas: 0,
+      });
+      data.categoriaId = nueva.id;
+      data.categoriaNombre = nueva.nombre;
+      delete data.nuevaCategoria;
+    } else if (data.categoriaId && data.categoriaId !== existe.categoriaId) {
+      const categoria = await CategoryDAO.findById(data.categoriaId);
+      if (categoria) data.categoriaNombre = categoria.nombre;
     }
 
     return RecipeDAO.update(id, data);

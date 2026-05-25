@@ -3,6 +3,8 @@ import { z } from 'zod';
 export const updateUsuarioSchema = z.object({
     nombre: z.string().min(2).max(100).optional(),
     fotoUrl: z.string().url().optional(),
+    bio: z.string().max(500).optional(),
+    especialidad: z.string().max(100).optional(),
 }).refine(data => Object.keys(data).length > 0, {
     message: 'Debes enviar al menos un campo para actualizar',
 });

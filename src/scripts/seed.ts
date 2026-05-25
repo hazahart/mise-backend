@@ -3,12 +3,12 @@ import '../lib/firebase';
 import { db } from '../lib/firebase';
 
 const categorias = [
-  { id: 'italiana', nombre: 'Italiana', descripcion: 'Pastas, risottos y clásicos de Italia', imagenUrl: null, totalRecetas: 3 },
-  { id: 'mexicana', nombre: 'Mexicana', descripcion: 'Tacos, enchiladas y sabores de México', imagenUrl: null, totalRecetas: 2 },
-  { id: 'japonesa', nombre: 'Japonesa', descripcion: 'Sushi, ramen y cocina japonesa', imagenUrl: null, totalRecetas: 2 },
-  { id: 'mediterranea', nombre: 'Mediterránea', descripcion: 'Cocina fresca del Mediterráneo', imagenUrl: null, totalRecetas: 2 },
-  { id: 'vegana', nombre: 'Vegana', descripcion: 'Recetas 100% de origen vegetal', imagenUrl: null, totalRecetas: 2 },
-  { id: 'postres', nombre: 'Postres', descripcion: 'Dulces, tartas y postres del mundo', imagenUrl: null, totalRecetas: 2 },
+  { id: 'italiana', nombre: 'Italiana', descripcion: 'Pastas, risottos y clásicos de Italia', imagenUrl: 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=800&q=80', totalRecetas: 2 },
+  { id: 'mexicana', nombre: 'Mexicana', descripcion: 'Tacos, enchiladas y sabores de México', imagenUrl: 'https://images.unsplash.com/photo-1565299585323-38d6b0865b47?w=800&q=80', totalRecetas: 1 },
+  { id: 'japonesa', nombre: 'Japonesa', descripcion: 'Sushi, ramen y cocina japonesa', imagenUrl: 'https://images.unsplash.com/photo-1569050467447-ce54b3bbc37d?w=800&q=80', totalRecetas: 1 },
+  { id: 'mediterranea', nombre: 'Mediterránea', descripcion: 'Cocina fresca del Mediterráneo', imagenUrl: 'https://images.unsplash.com/photo-1544025162-d76694265947?w=800&q=80', totalRecetas: 0 },
+  { id: 'vegana', nombre: 'Vegana', descripcion: 'Recetas 100% de origen vegetal', imagenUrl: 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=800&q=80', totalRecetas: 1 },
+  { id: 'postres', nombre: 'Postres', descripcion: 'Dulces, tartas y postres del mundo', imagenUrl: 'https://images.unsplash.com/photo-1551024601-bec78aea704b?w=800&q=80', totalRecetas: 1 },
 ];
 
 const recetas = [
@@ -20,7 +20,7 @@ const recetas = [
     categoriaNombre: 'Italiana',
     chefId: 'chef-demo',
     chefNombre: 'Marco Rossi',
-    imagenUrl: null,
+    imagenUrl: 'https://images.unsplash.com/photo-1612874742237-6526221588e3?w=800&q=80',
     tiempoEstimadoMin: 30,
     dificultad: 'media',
     esPremium: false,
@@ -48,7 +48,7 @@ const recetas = [
     categoriaNombre: 'Italiana',
     chefId: 'chef-demo',
     chefNombre: 'Marco Rossi',
-    imagenUrl: null,
+    imagenUrl: 'https://images.unsplash.com/photo-1476124369491-e7addf5db371?w=800&q=80',
     tiempoEstimadoMin: 40,
     dificultad: 'dificil',
     esPremium: true,
@@ -80,7 +80,7 @@ const recetas = [
     categoriaNombre: 'Mexicana',
     chefId: 'chef-demo',
     chefNombre: 'Ana García',
-    imagenUrl: null,
+    imagenUrl: 'https://images.unsplash.com/photo-1565299715199-866c917206bb?w=800&q=80',
     tiempoEstimadoMin: 45,
     dificultad: 'media',
     esPremium: false,
@@ -111,7 +111,7 @@ const recetas = [
     categoriaNombre: 'Japonesa',
     chefId: 'chef-demo',
     chefNombre: 'Yuki Tanaka',
-    imagenUrl: null,
+    imagenUrl: 'https://images.unsplash.com/photo-1569718212165-3a8278d5f624?w=800&q=80',
     tiempoEstimadoMin: 180,
     dificultad: 'dificil',
     esPremium: true,
@@ -145,7 +145,7 @@ const recetas = [
     categoriaNombre: 'Vegana',
     chefId: 'chef-demo',
     chefNombre: 'Laura Martínez',
-    imagenUrl: null,
+    imagenUrl: 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=800&q=80',
     tiempoEstimadoMin: 35,
     dificultad: 'facil',
     esPremium: false,
@@ -177,7 +177,7 @@ const recetas = [
     categoriaNombre: 'Postres',
     chefId: 'chef-demo',
     chefNombre: 'Marco Rossi',
-    imagenUrl: null,
+    imagenUrl: 'https://images.unsplash.com/photo-1571877227200-a0d98ea607e9?w=800&q=80',
     tiempoEstimadoMin: 30,
     dificultad: 'media',
     esPremium: true,
@@ -202,8 +202,22 @@ const recetas = [
   },
 ];
 
+async function clearCollections() {
+  console.log('🗑️  Limpiando colecciones...');
+  const collections = ['categorias', 'recetas', 'sesiones', 'usuarios'];
+  for (const col of collections) {
+    const snapshot = await db.collection(col).get();
+    const batch = db.batch();
+    snapshot.docs.forEach(doc => batch.delete(doc.ref));
+    await batch.commit();
+    console.log(`  ✅ ${col} limpiada`);
+  }
+}
+
 async function seed() {
   console.log('🌱 Iniciando seed...');
+
+  await clearCollections();
 
   console.log('📁 Seeding categorías...');
   for (const cat of categorias) {
@@ -212,7 +226,7 @@ async function seed() {
     console.log(`  ✅ ${cat.nombre}`);
   }
 
-  console.log('🍽️ Seeding recetas...');
+  console.log('🍽️  Seeding recetas...');
   for (const rec of recetas) {
     const { id, ...data } = rec;
     await db.collection('recetas').doc(id).set(data);

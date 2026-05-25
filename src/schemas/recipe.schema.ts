@@ -12,10 +12,17 @@ const pasoSchema = z.object({
   tiempoMin: z.number().int().min(0).optional(),
 });
 
+const nuevaCategoriaSchema = z.object({
+  nombre: z.string().min(1),
+  descripcion: z.string().min(1),
+  imagenUrl: z.string().url().nullable().optional().default(null),
+});
+
 export const createRecetaSchema = z.object({
   titulo: z.string().min(1, "El título es requerido"),
   descripcion: z.string().min(1, "La descripción es requerida"),
-  categoriaId: z.string().min(1, "La categoría es requerida"),
+  categoriaId: z.string().optional().default(''),
+  nuevaCategoria: nuevaCategoriaSchema.optional(),
   imagenUrl: z.string().url().nullable().optional().default(null),
   videoUrl: z.string().url().nullable().optional().default(null),
   tiempoEstimadoMin: z.number().int().min(1),
@@ -23,6 +30,8 @@ export const createRecetaSchema = z.object({
   esPremium: z.boolean().default(false),
   ingredientes: z.array(ingredienteSchema).min(1),
   pasos: z.array(pasoSchema).min(1),
+}).refine(data => data.categoriaId || data.nuevaCategoria, {
+  message: "Debes seleccionar una categoría o crear una nueva",
 });
 
 export const updateRecetaSchema = z.object({
@@ -30,6 +39,7 @@ export const updateRecetaSchema = z.object({
   descripcion: z.string().min(1).optional(),
   categoriaId: z.string().min(1).optional(),
   categoriaNombre: z.string().min(1).optional(),
+  nuevaCategoria: nuevaCategoriaSchema.optional(),
   imagenUrl: z.string().url().nullable().optional(),
   videoUrl: z.string().url().nullable().optional(),
   tiempoEstimadoMin: z.number().int().min(1).optional(),

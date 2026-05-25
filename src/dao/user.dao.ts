@@ -14,6 +14,7 @@ export class UserDAO {
                     rol: 'free',
                     suscripcionActiva: false,
                     suscripcionExpira: null,
+                    suscripcionCancelada: false,
                     stripeCustomerId: null,
                     onboardingCompletado: false,
                     creadoEn: new Date().toISOString(),
@@ -28,8 +29,11 @@ export class UserDAO {
                     rol: 'free',
                     suscripcionActiva: false,
                     suscripcionExpira: null,
+                    suscripcionCancelada: false,
                     stripeCustomerId: null,
                     onboardingCompletado: false,
+                    bio: null,
+                    especialidad: null,
                 };
             }
 
@@ -44,8 +48,11 @@ export class UserDAO {
                 rol: data['rol'] ?? 'free',
                 suscripcionActiva: data['suscripcionActiva'] ?? false,
                 suscripcionExpira: data['suscripcionExpira'] ?? null,
+                suscripcionCancelada: data['suscripcionCancelada'] ?? false,
                 stripeCustomerId: data['stripeCustomerId'] ?? null,
                 onboardingCompletado: data['onboardingCompletado'] ?? false,
+                bio: data['bio'] ?? null,
+                especialidad: data['especialidad'] ?? null,
             };
         } catch {
             return null;
@@ -69,16 +76,23 @@ export class UserDAO {
             rol: data['rol'] ?? 'free',
             suscripcionActiva: data['suscripcionActiva'] ?? false,
             suscripcionExpira: data['suscripcionExpira'] ?? null,
+            suscripcionCancelada: data['suscripcionCancelada'] ?? false,
             stripeCustomerId: data['stripeCustomerId'] ?? null,
             onboardingCompletado: data['onboardingCompletado'] ?? false,
+            bio: data['bio'] ?? null,
+            especialidad: data['especialidad'] ?? null,
         };
     }
 
-    async update(userId: string, data: { nombre?: string; fotoUrl?: string }) {
+    async update(userId: string, data: { nombre?: string; fotoUrl?: string; bio?: string; especialidad?: string }) {
         await auth.updateUser(userId, {
             ...(data.nombre && { displayName: data.nombre }),
             ...(data.fotoUrl && { photoURL: data.fotoUrl }),
         });
+        await db.collection('usuarios').doc(userId).set({
+            ...(data.bio !== undefined && { bio: data.bio }),
+            ...(data.especialidad !== undefined && { especialidad: data.especialidad }),
+        }, { merge: true });
         return this.findById(userId);
     }
 
@@ -111,6 +125,7 @@ export class UserDAO {
         await db.collection('usuarios').doc(userId).set({
             rol: data.nuevoRol,
             suscripcionActiva: data.nuevoRol === 'premium',
+            suscripcionCancelada: false,
             ...(data.stripeCustomerId && { stripeCustomerId: data.stripeCustomerId }),
             ...(data.stripeSubscriptionId && { stripeSubscriptionId: data.stripeSubscriptionId }),
             ...(data.suscripcionExpira && { suscripcionExpira: data.suscripcionExpira }),
