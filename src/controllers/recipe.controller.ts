@@ -64,4 +64,14 @@ export const RecipeController = {
       next(error);
     }
   },
+
+  async getByChef(req: Request, res: Response, next: NextFunction) {
+    try {
+      const chefId = req.user!.uid;
+      const result = await RecipeService.getByChef(chefId);
+      res.json(result);
+    } catch (error) {
+      next(error);
+    }
+  },
 };

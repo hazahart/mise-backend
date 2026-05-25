@@ -94,4 +94,16 @@ export const RecipeDAO = {
   async remove(id: string): Promise<void> {
     await db.collection("recetas").doc(id).delete();
   },
+
+  async findByChef(chefId: string): Promise<Receta[]> {
+    const snapshot = await db
+      .collection('recetas')
+      .where('chefId', '==', chefId)
+      .orderBy('creadoEn', 'desc')
+      .get();
+    return snapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+    })) as Receta[];
+  },
 };

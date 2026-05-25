@@ -53,4 +53,8 @@ export const RecipeService = {
     }
     return RecipeDAO.remove(id);
   },
+
+  async getByChef(chefId: string): Promise<Receta[]> {
+    return RecipeDAO.findByChef(chefId);
+  },
 };
