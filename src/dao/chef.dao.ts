@@ -1,4 +1,4 @@
-import {auth, db} from '../lib/firebase';
+import { auth, db } from '../lib/firebase';
 
 export class ChefDAO {
 
@@ -55,29 +55,37 @@ export class ChefDAO {
     }
 
     async getAvailability(chefId: string, fecha: string) {
-        const slots = [
-            `${fecha}T09:00:00Z`,
-            `${fecha}T11:00:00Z`,
-            `${fecha}T13:00:00Z`,
-            `${fecha}T16:00:00Z`,
-            `${fecha}T18:00:00Z`,
-        ];
-
         try {
+            const doc = await db.collection('usuarios').doc(chefId).get();
+            const data = doc.data() ?? {};
+            const slots: string[] = data['slotsDisponibles'] ?? ['09:00', '11:00', '13:00', '16:00', '18:00'];
+            const diasDisponibles: number[] = data['diasDisponibles'] ?? [1, 2, 3, 4, 5];
+
+            const diaSemana = new Date(fecha + 'T12:00:00').getDay();
+            if (!diasDisponibles.includes(diaSemana)) {
+                return { chefId, fecha, slotsDisponibles: [] };
+            }
+
             const snapshot = await db.collection('sesiones')
                 .where('chefId', '==', chefId)
-                .where('fecha', '>=', `${fecha}T00:00:00Z`)
-                .where('fecha', '<=', `${fecha}T23:59:59Z`)
-                .where('estado', '!=', 'cancelada')
+                .where('fecha', '==', fecha)
+                .where('estado', 'in', ['pendiente', 'confirmada'])
                 .get();
 
-            const ocupados = snapshot.docs.map(d => d.data().fecha as string);
+            const ocupados = snapshot.docs.map(d => d.data().hora as string);
             const disponibles = slots.filter(s => !ocupados.includes(s));
 
-            return {chefId, fecha, slotsDisponibles: disponibles};
+            return { chefId, fecha, slotsDisponibles: disponibles };
         } catch {
-            return {chefId, fecha, slotsDisponibles: slots};
+            return { chefId, fecha, slotsDisponibles: [] };
         }
+    }
+
+    async updateDisponibilidad(chefId: string, data: { slots: string[]; diasDisponibles?: number[] }) {
+        await db.collection('usuarios').doc(chefId).set({
+            slotsDisponibles: data.slots,
+            ...(data.diasDisponibles && { diasDisponibles: data.diasDisponibles }),
+        }, { merge: true });
     }
 }
 

@@ -59,4 +59,14 @@ export const SessionController = {
             next(error);
         }
     },
+    
+    async getChefSessions(req: Request, res: Response, next: NextFunction) {
+        try {
+            const chefId = req.user!.uid;
+            const sesiones = await SessionService.getByChef(chefId);
+            res.json(sesiones);
+        } catch (error) {
+            next(error);
+        }
+    },
 };

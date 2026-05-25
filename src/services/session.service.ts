@@ -1,5 +1,6 @@
 import { SessionDAO } from '../dao/session.dao';
 import { userDAO } from '../dao/user.dao';
+import { auth } from '../lib/firebase';
 import type { Sesion, EstadoSesion } from '../types/session';
 
 export const SessionService = {
@@ -36,9 +37,8 @@ export const SessionService = {
             throw { status: 409, code: 'conflict', message: 'El chef ya tiene una sesión en ese horario' };
         }
 
-        const { db } = await import('../lib/firebase');
-        const chefDoc = await db.collection('usuarios').doc(data.chefId).get();
-        const chefNombre = chefDoc.data()?.['displayName'] ?? 'Chef';
+        const chefUser = await auth.getUser(data.chefId);
+        const chefNombre = chefUser.displayName ?? 'Chef';
 
         const ahora = new Date().toISOString();
         return SessionDAO.create({

@@ -1,4 +1,5 @@
 import { db } from "../lib/firebase";
+import admin from "../lib/firebase";
 import type { Receta } from "../types/catalog";
 
 export const RecipeDAO = {
@@ -55,13 +56,14 @@ export const RecipeDAO = {
     const snapshot = await db
       .collection("recetas")
       .where("esPremium", "==", true)
-      .orderBy("creadoEn", "desc")
-      .limit(6)
       .get();
-    return snapshot.docs.map((doc) => ({
+
+    const todas = snapshot.docs.map((doc) => ({
       id: doc.id,
       ...doc.data(),
     })) as Receta[];
+
+    return todas.sort(() => Math.random() - 0.5).slice(0, 3);
   },
 
   async create(data: Omit<Receta, "id">): Promise<Receta> {
@@ -77,6 +79,9 @@ export const RecipeDAO = {
       creadoEn: new Date().toISOString(),
     };
     await db.collection("recetas").doc(id).set(receta);
+    await db.collection("categorias").doc(data.categoriaId).update({
+      totalRecetas: admin.firestore.FieldValue.increment(1),
+    });
     return { id, ...receta };
   },
 
@@ -91,6 +96,25 @@ export const RecipeDAO = {
   },
 
   async remove(id: string): Promise<void> {
+    const doc = await db.collection("recetas").doc(id).get();
+    const categoriaId = doc.data()?.['categoriaId'] as string | undefined;
     await db.collection("recetas").doc(id).delete();
+    if (categoriaId) {
+      await db.collection("categorias").doc(categoriaId).update({
+        totalRecetas: admin.firestore.FieldValue.increment(-1),
+      });
+    }
+  },
+
+  async findByChef(chefId: string): Promise<Receta[]> {
+    const snapshot = await db
+      .collection('recetas')
+      .where('chefId', '==', chefId)
+      .orderBy('creadoEn', 'desc')
+      .get();
+    return snapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+    })) as Receta[];
   },
 };

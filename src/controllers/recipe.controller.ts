@@ -34,7 +34,8 @@ export const RecipeController = {
 
   async create(req: Request, res: Response, next: NextFunction) {
     try {
-      const receta = await RecipeService.create(req.body);
+      const chefId = req.user!.uid;
+      const receta = await RecipeService.create(chefId, req.body);
       res.status(201).json(receta);
     } catch (error) {
       next(error);
@@ -60,6 +61,16 @@ export const RecipeController = {
       const chefId = req.user!.uid;
       await RecipeService.remove(req.params["id"] as string, chefId);
       res.status(204).send();
+    } catch (error) {
+      next(error);
+    }
+  },
+
+  async getByChef(req: Request, res: Response, next: NextFunction) {
+    try {
+      const chefId = req.user!.uid;
+      const result = await RecipeService.getByChef(chefId);
+      res.json(result);
     } catch (error) {
       next(error);
     }
