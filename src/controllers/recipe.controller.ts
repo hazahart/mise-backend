@@ -16,7 +16,23 @@ export const RecipeController = {
 
   async getById(req: Request, res: Response, next: NextFunction) {
     try {
-      const receta = await RecipeService.getById(req.params["id"] as string);
+      const receta = await RecipeService.getById(req.params['id'] as string);
+      if (receta.esPremium) {
+        const token = req.headers.authorization?.split('Bearer ')[1];
+        if (!token) {
+          return res.status(403).json({ code: 'forbidden', message: 'Esta receta es exclusiva para usuarios premium' });
+        }
+        try {
+          const { auth } = await import('../lib/firebase');
+          const decoded = await auth.verifyIdToken(token);
+          const rol = decoded.rol ?? 'free';
+          if (rol === 'free') {
+            return res.status(403).json({ code: 'forbidden', message: 'Esta receta es exclusiva para usuarios premium' });
+          }
+        } catch {
+          return res.status(403).json({ code: 'forbidden', message: 'Esta receta es exclusiva para usuarios premium' });
+        }
+      }
       res.json(receta);
     } catch (error) {
       next(error);
