@@ -34,7 +34,8 @@ export const RecipeController = {
 
   async create(req: Request, res: Response, next: NextFunction) {
     try {
-      const receta = await RecipeService.create(req.body);
+      const chefId = req.user!.uid;
+      const receta = await RecipeService.create(chefId, req.body);
       res.status(201).json(receta);
     } catch (error) {
       next(error);
