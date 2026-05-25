@@ -13,5 +13,6 @@ if (!admin.apps.length) {
 
 export const auth = admin.auth();
 export const db = admin.firestore();
+db.settings({ ignoreUndefinedProperties: true });
 export const rtdb = admin.database();
 export default admin;
