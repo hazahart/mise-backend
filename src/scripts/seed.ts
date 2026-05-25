@@ -3,9 +3,9 @@ import '../lib/firebase';
 import { db } from '../lib/firebase';
 
 const categorias = [
-  { id: 'italiana', nombre: 'Italiana', descripcion: 'Pastas, risottos y clásicos de Italia', imagenUrl: 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=800&q=80', totalRecetas: 2 },
+  { id: 'italiana', nombre: 'Italiana', descripcion: 'Pastas, risottos y clásicos de Italia', imagenUrl: 'https://images.unsplash.com/photo-1498579150354-977475b7ea0b?w=800&q=80', totalRecetas: 2 },
   { id: 'mexicana', nombre: 'Mexicana', descripcion: 'Tacos, enchiladas y sabores de México', imagenUrl: 'https://images.unsplash.com/photo-1565299585323-38d6b0865b47?w=800&q=80', totalRecetas: 1 },
-  { id: 'japonesa', nombre: 'Japonesa', descripcion: 'Sushi, ramen y cocina japonesa', imagenUrl: 'https://images.unsplash.com/photo-1569050467447-ce54b3bbc37d?w=800&q=80', totalRecetas: 1 },
+  { id: 'japonesa', nombre: 'Japonesa', descripcion: 'Sushi, ramen y cocina japonesa', imagenUrl: 'https://images.unsplash.com/photo-1569718212165-3a8278d5f624?w=800&q=80', totalRecetas: 1 },
   { id: 'mediterranea', nombre: 'Mediterránea', descripcion: 'Cocina fresca del Mediterráneo', imagenUrl: 'https://images.unsplash.com/photo-1544025162-d76694265947?w=800&q=80', totalRecetas: 0 },
   { id: 'vegana', nombre: 'Vegana', descripcion: 'Recetas 100% de origen vegetal', imagenUrl: 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=800&q=80', totalRecetas: 1 },
   { id: 'postres', nombre: 'Postres', descripcion: 'Dulces, tartas y postres del mundo', imagenUrl: 'https://images.unsplash.com/photo-1551024601-bec78aea704b?w=800&q=80', totalRecetas: 1 },
@@ -20,7 +20,7 @@ const recetas = [
     categoriaNombre: 'Italiana',
     chefId: 'chef-demo',
     chefNombre: 'Marco Rossi',
-    imagenUrl: 'https://images.unsplash.com/photo-1612874742237-6526221588e3?w=800&q=80',
+    imagenUrl: 'https://images.unsplash.com/photo-1603729362753-f8162ac6c3df?w=800&q=80',
     tiempoEstimadoMin: 30,
     dificultad: 'media',
     esPremium: false,
@@ -80,7 +80,7 @@ const recetas = [
     categoriaNombre: 'Mexicana',
     chefId: 'chef-demo',
     chefNombre: 'Ana García',
-    imagenUrl: 'https://images.unsplash.com/photo-1565299715199-866c917206bb?w=800&q=80',
+    imagenUrl: 'https://images.unsplash.com/photo-1613409385222-3d0decb6742a?q=80',
     tiempoEstimadoMin: 45,
     dificultad: 'media',
     esPremium: false,
@@ -111,7 +111,7 @@ const recetas = [
     categoriaNombre: 'Japonesa',
     chefId: 'chef-demo',
     chefNombre: 'Yuki Tanaka',
-    imagenUrl: 'https://images.unsplash.com/photo-1569718212165-3a8278d5f624?w=800&q=80',
+    imagenUrl: 'https://images.unsplash.com/photo-1623341214825-9f4f963727da?w=800&q=80',
     tiempoEstimadoMin: 180,
     dificultad: 'dificil',
     esPremium: true,
@@ -145,7 +145,7 @@ const recetas = [
     categoriaNombre: 'Vegana',
     chefId: 'chef-demo',
     chefNombre: 'Laura Martínez',
-    imagenUrl: 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=800&q=80',
+    imagenUrl: 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=800&q=80',
     tiempoEstimadoMin: 35,
     dificultad: 'facil',
     esPremium: false,
@@ -216,7 +216,6 @@ async function clearCollections() {
 
 async function seed() {
   console.log('🌱 Iniciando seed...');
-
   await clearCollections();
 
   console.log('📁 Seeding categorías...');
